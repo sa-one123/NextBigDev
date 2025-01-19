@@ -1,20 +1,19 @@
-import NextAuth from "next-auth";
+import NextAuth, { AuthOptions, User } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import { MongoDBAdapter } from "@next-auth/mongodb-adapter";
 import clientPromise from "../../../../lib/mongodb";
+import { JWT } from "next-auth/jwt";
 
-export const authOptions = {
+interface ExtendedUser extends User {
+  role?: string; // Extend the default User type to include role
+}
+export const authOptions: AuthOptions = {
   debug: true, // Enable debug mode
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      wellKnown: {
-        authorization_endpoint: "https://accounts.google.com/o/oauth2/v2/auth",
-        token_endpoint: "https://oauth2.googleapis.com/token",
-        userinfo_endpoint: "https://openidconnect.googleapis.com/v1/userinfo",
-      },
       httpOptions: {
         timeout: 52000,
       },
@@ -27,7 +26,7 @@ export const authOptions = {
   adapter: MongoDBAdapter(clientPromise),
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async signIn({ user }: { user: any }) {
+    async signIn({ user }: { user: ExtendedUser }) {
       console.log(authOptions)
       const client = await clientPromise;
       const db = client.db("white_board");
@@ -43,23 +42,25 @@ export const authOptions = {
 
       return true;
     },
-    async session({ session, token, user } : any) {
-      // Make sure `session.user` exists and attach additional properties
-      if (session?.user) {
-        session.user.role = user?.role || token?.role || null; // Add a default value to avoid undefined
-      }
-      return session;
+    session({ session}) {
+      return session // The return type will match the one returned in `useSession()`
     },
-    async redirect({ url, baseUrl } : any) {
+    async redirect({ baseUrl }: { baseUrl: string }) {
       return `${baseUrl}/dashboard`;
     },
-    async jwt({ token, user }: { token: any; user: any }) {
-      console.log(user)
+    async jwt({
+      token,
+      user,
+    }: {
+      token: JWT;
+      user?: ExtendedUser;
+    }) {
+      console.log(user);
       if (user) {
         token.role = user.role;
       }
       return token;
-    },
+    }
   },
 };
 
