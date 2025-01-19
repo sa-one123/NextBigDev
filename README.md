@@ -34,5 +34,4 @@ An advanced collaborative whiteboard application with real-time drawing, multi-u
 ## Getting Started
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/collaborative-whiteboard.git
-
+   git clone https://github.com/sa-one123/collaborative-whiteboard.git
