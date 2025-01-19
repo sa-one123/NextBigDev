@@ -9,7 +9,6 @@ interface ExtendedUser extends User {
   role?: string; // Extend the default User type to include role
 }
 export const authOptions: AuthOptions = {
-  debug: true, // Enable debug mode
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -27,7 +26,6 @@ export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async signIn({ user }: { user: ExtendedUser }) {
-      console.log(authOptions)
       const client = await clientPromise;
       const db = client.db("white_board");
 
